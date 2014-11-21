@@ -1,5 +1,7 @@
 package com.twitter.finagle.http
 
+import javax.security.cert.X509Certificate
+
 import com.twitter.finagle.transport.Transport
 import com.twitter.finagle.http.codec.ConnectionManager
 import com.twitter.util.{Future, Time}
@@ -35,6 +37,8 @@ class HttpTransport(
   def localAddress: SocketAddress = self.localAddress
 
   def remoteAddress: SocketAddress = self.remoteAddress
+
+  def clientCertificate: Option[X509Certificate] = self.clientCertificate
 
   val onClose: Future[Throwable] = self.onClose
 }

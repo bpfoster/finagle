@@ -1,5 +1,8 @@
 package com.twitter.finagle.transport
 
+import javax.net.ssl.SSLPeerUnverifiedException
+import javax.security.cert.X509Certificate
+
 import com.twitter.concurrent.AsyncQueue
 import com.twitter.finagle.{
   CancelledWriteException, ChannelClosedException, ChannelException}
@@ -7,6 +10,7 @@ import com.twitter.util.{Future, Return, Promise, Time}
 import java.net.SocketAddress
 import java.util.concurrent.atomic.AtomicBoolean
 import org.jboss.netty.channel._
+import org.jboss.netty.handler.ssl.SslHandler
 
 class ChannelTransport[In, Out](ch: Channel)
   extends Transport[In, Out] with ChannelUpstreamHandler
@@ -119,6 +123,23 @@ class ChannelTransport[In, Out](ch: Channel)
 
   def localAddress: SocketAddress = ch.getLocalAddress()
   def remoteAddress: SocketAddress = ch.getRemoteAddress()
+  def clientCertificate: Option[X509Certificate] = ch.getPipeline.get(classOf[SslHandler]) match {
+    case sslhander: SslHandler => {
+      val certChain = try {
+        sslhander.getEngine.getSession.getPeerCertificateChain
+      } catch {
+        case e: SSLPeerUnverifiedException => null
+      }
+
+      if (certChain != null && certChain.length > 0) {
+        Some(certChain.head)
+      } else {
+        None
+      }
+    }
+    case _ => None
+  }
+
 
   private[this] val closep = new Promise[Throwable]
   val onClose: Future[Throwable] = closep

@@ -1,6 +1,7 @@
 package com.twitter.finagle
 
 import java.net.SocketAddress
+import javax.security.cert.X509Certificate
 import com.twitter.util.{Closable, Future, Time}
 
 object Service {
@@ -76,6 +77,13 @@ trait ClientConnection extends Closable {
   def localAddress: SocketAddress
 
   /**
+   * Option of the client X509 certificate.  If client auth is requested
+   * and the client successfully negotiates a certificate, this will contain
+   * that X509 certificate
+   */
+  def clientCertificate: Option[X509Certificate]
+
+  /**
    * Expose a Future[Unit] that will be filled when the connection is closed
    * Useful if you want to trigger action on connection closing
    */
@@ -88,6 +96,7 @@ object ClientConnection {
       new SocketAddress { override def toString = "unconnected" }
     def remoteAddress = unconnected
     def localAddress = unconnected
+    def clientCertificate = None
     def close(deadline: Time) = Future.Done
     def onClose = Future.never
   }

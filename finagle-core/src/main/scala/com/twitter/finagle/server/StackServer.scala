@@ -169,6 +169,7 @@ trait StdStackServer[Req, Rep, This <: StdStackServer[Req, Rep, This]]
       def newConn(transport: Transport[In, Out]) = new ClientConnection {
         val remoteAddress = transport.remoteAddress
         val localAddress = transport.localAddress
+        def clientCertificate = transport.clientCertificate
         def close(deadline: Time) = transport.close(deadline)
         val onClose = transport.onClose.map(_ => ())
       }

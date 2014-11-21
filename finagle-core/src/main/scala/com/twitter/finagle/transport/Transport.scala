@@ -1,5 +1,7 @@
 package com.twitter.finagle.transport
 
+import javax.security.cert.X509Certificate
+
 import com.twitter.concurrent.AsyncQueue
 import com.twitter.finagle.Stack
 import com.twitter.io.{Buf, Writer}
@@ -48,6 +50,11 @@ trait Transport[In, Out] extends Closable { self =>
   def remoteAddress: SocketAddress
 
   /**
+   * The SSL client certificate to which the transport is connected, if provided.
+   */
+  def clientCertificate: Option[X509Certificate]
+
+  /**
    * Cast this transport to `Transport[In1, Out1]`. Note that this is
    * generally unsafe: only do this when you know the cast is
    * guaranteed safe.
@@ -59,6 +66,7 @@ trait Transport[In, Out] extends Closable { self =>
     val onClose = self.onClose
     def localAddress = self.localAddress
     def remoteAddress = self.remoteAddress
+    def clientCertificate = self.clientCertificate
     def close(deadline: Time) = self.close(deadline)
   }
 }
@@ -190,4 +198,5 @@ class QueueTransport[In, Out](writeq: AsyncQueue[In], readq: AsyncQueue[Out])
   val onClose = closep
   val localAddress = new SocketAddress{}
   val remoteAddress = new SocketAddress{}
+  val clientCertificate = None
 }
