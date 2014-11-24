@@ -300,7 +300,7 @@ trait ThriftRichServer { self: Server[Array[Byte], Array[Byte]] =>
 
   protected val protocolFactory: TProtocolFactory
 
-  private[this] def serverFromIface(impl: AnyRef): BinaryService = {
+  def serverFromIface(impl: AnyRef): BinaryService = {
     def tryThriftFinagleService(iface: Class[_]): Option[BinaryService] =
       for {
         baseName   <- findRootWithSuffix(iface.getName, "$ServiceIface")
