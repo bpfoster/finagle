@@ -2,9 +2,10 @@ package com.twitter.finagle
 
 import com.twitter.finagle.client.{StdStackClient, StackClient, Transporter}
 import com.twitter.finagle.dispatch.{SerialClientDispatcher, SerialServerDispatcher}
-import com.twitter.finagle.netty3.{Netty3Transporter, Netty3Listener}
+import com.twitter.finagle.netty3.{Netty3TransporterTLSConfig, Netty3ListenerTLSConfig, Netty3Transporter, Netty3Listener}
 import com.twitter.finagle.param.Stats
 import com.twitter.finagle.server.{StdStackServer, StackServer, Listener}
+import com.twitter.finagle.ssl.Ssl
 import com.twitter.finagle.thrift.{ClientId => _, _}
 import com.twitter.finagle.transport.Transport
 import com.twitter.util.Stopwatch
@@ -131,6 +132,16 @@ object Thrift extends Client[ThriftClientRequest, Array[Byte]] with ThriftRichCl
     def withClientId(clientId: thrift.ClientId): Client =
       configured(param.ClientId(clientId))
 
+    def withTls(cfg: Netty3TransporterTLSConfig): Client =
+      configured((Transport.TLSEngine(Some(cfg.newEngine))))
+        .configured(Transporter.TLSHostname(cfg.verifyHost))
+
+    def withTls(hostname: String): Client =
+      withTls(new Netty3TransporterTLSConfig({ () => Ssl.client() }, Some(hostname)))
+
+    def withTlsWithoutValidation(): Client =
+      configured(Transport.TLSEngine(Some({ () => Ssl.clientWithoutCertificateValidation() })))
+
     def clientId: Option[thrift.ClientId] =
       if (params.contains[param.ClientId])
         Some(params[param.ClientId].clientId)
@@ -195,6 +206,9 @@ object Thrift extends Client[ThriftClientRequest, Array[Byte]] with ThriftRichCl
 
     def withProtocolFactory(protocolFactory: TProtocolFactory): Server =
       copy(protocolFactory=protocolFactory)
+
+    def withTls(cfg: Netty3ListenerTLSConfig): Server =
+      configured(Transport.TLSEngine(Some(cfg.newEngine)))
 
     def withBufferedTransport(): Server = copy(framed=false)
   }
