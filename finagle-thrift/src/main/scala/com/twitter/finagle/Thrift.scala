@@ -3,7 +3,7 @@ package com.twitter.finagle
 import com.twitter.finagle.client.{StdStackClient, StackClient, Transporter}
 import com.twitter.finagle.dispatch.{SerialClientDispatcher, SerialServerDispatcher}
 import com.twitter.finagle.netty3.{Netty3TransporterTLSConfig, Netty3ListenerTLSConfig, Netty3Transporter, Netty3Listener}
-import com.twitter.finagle.param.Stats
+import com.twitter.finagle.param.{Label, Stats}
 import com.twitter.finagle.server.{StdStackServer, StackServer, Listener}
 import com.twitter.finagle.ssl.Ssl
 import com.twitter.finagle.thrift.{ClientId => _, _}
@@ -197,8 +197,7 @@ object Thrift extends Client[ThriftClientRequest, Array[Byte]] with ThriftRichCl
       val pipeline =
         if (framed) thrift.ThriftServerFramedPipelineFactory
         else thrift.ThriftServerBufferedPipelineFactory(protocolFactory)
-
-      Netty3Listener("thrift", pipeline)
+      Netty3Listener(pipeline, params + Label("thrift"))
     }
 
     protected def newDispatcher(transport: Transport[In, Out], service: Service[Array[Byte], Array[Byte]]) =
